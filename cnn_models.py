@@ -1,7 +1,7 @@
 
-# ### LeNet Model
+import tensorflow as tf
+# LeNet Model
 
-# In[ ]:
 
 
 def LeNet_Model(input_shape):
