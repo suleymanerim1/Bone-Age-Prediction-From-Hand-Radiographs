@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+# Import Packages
 import os
-
 import matplotlib.pyplot as plt
 import numpy as np
-# Import Packages
 import tensorflow as tf
 
 
@@ -57,7 +56,7 @@ def image_csv_match(image_path, csv_path):
     return image_file_list, np.array(features).squeeze()
 
 
-def image_dataset_creator_from_path(image_file_list, input_shape=(224, 224), channels=3):
+def image_dataset_creator_from_path(image_file_list,Input_size = 224):
     """
     Creates a dataset from a list of image file paths. The images are read, decoded, resized, and standardized.
 
@@ -66,29 +65,28 @@ def image_dataset_creator_from_path(image_file_list, input_shape=(224, 224), cha
 
     Returns:
         A TensorFlow dataset containing the images.
-        :param channels:
         :param image_file_list:
-        :param input_shape:
     """
-
+    Input_size = 224
     # Create a dataset from the list of image paths
     dataset = tf.data.Dataset.from_tensor_slices(image_file_list)
 
     # Define a function to read and decode an image
-    def read_and_decode_image(image_path, input_shape=(224, 224), channels=3):
+    def read_and_decode_image(image_path):
+
         # Read the image file
-        image_string = tf.io.read_file(image_path, )
+        image_string = tf.io.read_file(image_path)
         # Decode the image
-        image = tf.image.decode_png(image_string, channels)
+        image = tf.image.decode_png(image_string, channels=3)
         # Resize the image
-        image_resized = tf.image.resize(image, input_shape)
+        image_resized = tf.image.resize(image, (Input_size, Input_size))
         # Standardized image
         image_standardized = tf.image.convert_image_dtype(
             image_resized, dtype=tf.float32)
         return image_standardized
 
     # Map the function over the dataset
-    dataset = dataset.map(read_and_decode_image, input_shape, channels)
+    dataset = dataset.map(read_and_decode_image)
 
     return dataset
 
@@ -112,7 +110,6 @@ def data_augmentation(images):
 
 # Create Dataset
 AUTOTUNE = tf.data.AUTOTUNE
-
 
 def create_dataset(dataset, batch_size, shuffle=False, augment=False, cache_file=None):
     """
