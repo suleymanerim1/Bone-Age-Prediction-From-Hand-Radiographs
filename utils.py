@@ -8,14 +8,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-# Avoid Out of Memory errors by setting GPU memory consumption growth
-gpus = tf.config.experimental.list_physical_devices('GPU')
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
-
-tf.config.list_physical_devices('GPU')
-
-
 # Load Datasets
 def image_csv_match(image_path, csv_path):
     """
@@ -63,16 +55,6 @@ def image_csv_match(image_path, csv_path):
     # Convert the array to a NumPy array
     return image_file_list, np.array(features).squeeze()
 
-
-# In[3]:
-
-
-Input_Size = 224
-
-
-# In[4]:
-
-
 def image_dataset_creator_from_path(image_file_list):
     """
     Creates a dataset from a list of image file paths. The images are read, decoded, resized, and standardized.
@@ -88,7 +70,6 @@ def image_dataset_creator_from_path(image_file_list):
     dataset = tf.data.Dataset.from_tensor_slices(image_file_list)
 
     # Define a function to read and decode an image
-
     def read_and_decode_image(image_path):
         # Read the image file
         image_string = tf.io.read_file(image_path)
@@ -106,76 +87,6 @@ def image_dataset_creator_from_path(image_file_list):
 
     return dataset
 
-
-# ### Create train dataset
-
-# In[5]:
-
-
-train_path = 'Bone Age Datasets\\train'
-train_csv_path = 'Bone Age Datasets\\train.csv'
-
-# return test images paths list and features (id,male,age)
-image_file_list, features = image_csv_match(train_path, train_csv_path)
-
-# create a tf.dataset of test images
-images_dataset = image_dataset_creator_from_path(image_file_list)
-
-# get age from features
-age = (features[:, -1]).astype(float)
-
-# Create an age tf.dataset from the NumPy array
-age_dataset = tf.data.Dataset.from_tensor_slices(age)
-
-# Create a dataset of images zipped with age
-train_dataset = tf.data.Dataset.zip((images_dataset, age_dataset))
-
-# ### Create validation dataset
-
-# In[6]:
-
-
-validation_path = 'Bone Age Datasets\\validation'
-validation_csv_path = 'Bone Age Datasets\\validation.csv'
-
-# return test images paths list and features (id,male,age)
-image_file_list, features = image_csv_match(
-    validation_path, validation_csv_path)
-
-# create a tf.dataset of test images
-images_dataset = image_dataset_creator_from_path(image_file_list)
-
-# get age from features
-age = (features[:, -1]).astype(float)
-
-# Create an age tf.dataset from the NumPy array
-age_dataset = tf.data.Dataset.from_tensor_slices(age)
-
-# Create a dataset of iamges zipped with age
-validation_dataset = tf.data.Dataset.zip((images_dataset, age_dataset))
-
-# ### Create test dataset
-
-# In[7]:
-
-
-test_path = 'Bone Age Datasets\\test'
-test_csv_path = 'Bone Age Datasets\\test.csv'
-
-# return test images paths list and features (id,male,age)
-image_file_list, features = image_csv_match(test_path, test_csv_path)
-
-# create a tf.dataset of test images
-images_dataset = image_dataset_creator_from_path(image_file_list)
-
-# get age from features
-age = (features[:, -1]).astype(float)
-
-# Create an age tf.dataset from the NumPy array
-age_dataset = tf.data.Dataset.from_tensor_slices(age)
-
-# Create a dataset of images zipped with age
-test_dataset = tf.data.Dataset.zip((images_dataset, age_dataset))
 
 
 # ## Augmentation
