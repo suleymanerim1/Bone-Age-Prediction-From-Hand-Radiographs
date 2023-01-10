@@ -189,3 +189,9 @@ def hist_graphs(hist):
     ax1.legend(['Training', 'Validation'], loc='upper left')
 
     plt.show()
+
+# Define a function to unzip the dataset
+def unzip_dataset(zip_element):
+    images, feature_and_output = zip_element
+    feature, output = feature_and_output
+    return images, feature, output

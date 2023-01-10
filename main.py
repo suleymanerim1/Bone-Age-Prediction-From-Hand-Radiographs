@@ -34,12 +34,16 @@ for path in data_paths:
 
     # get age from features
     age = (features[:, -1]).astype(float)
-
     # Create an age tf.dataset from the NumPy array
     age_dataset = tf.data.Dataset.from_tensor_slices(age)
 
+    # get gender from features
+    gender = (features[:, 1]).astype(int)
+    # Create an age tf.dataset from the NumPy array
+    gender_dataset = tf.data.Dataset.from_tensor_slices(gender)
+
     # Create a dataset of images zipped with age
-    datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
+    datasets.append(tf.data.Dataset.zip((images_dataset,gender_dataset, age_dataset)))
 
 train_dataset = datasets[0]
 val_dataset = datasets[1]
@@ -79,13 +83,30 @@ adam_optimizer = keras.optimizers.Adam(learning_rate=0.001)
 model.compile(optimizer=adam_optimizer, loss=tf.keras.losses.MeanAbsoluteError(),
                   metrics=tf.keras.metrics.mean_absolute_error)
 
+
 # Train the model
-hist = model.fit(train_dataset, epochs=200,
-                     validation_data=val_dataset,
-                     callbacks=[early_stopping],
-                     use_multiprocessing=True,
-                     workers=os.cpu_count()
-                     )
+# hist = model.fit(train_dataset, epochs=200,
+#                      validation_data=val_dataset,
+#                      callbacks=[early_stopping],
+#                      use_multiprocessing=True,
+#                      workers=os.cpu_count()
+#                      )
+
+
+# Apply the unzip_fn to each element of the dataset
+unzipped_train = train_dataset.map(utils.unzip_dataset)
+unzipped_val = val_dataset.map(utils.unzip_dataset)
+
+# Now that the dataset is unzipped, you can pass the images, features and output to model.fit
+hist = model.fit(x=[unzipped_train[0],unzipped_train[1]],y=unzipped_train[2],
+          validation_data=([unzipped_val[0],unzipped_val[1]],unzipped_val[2]),
+          epochs=5)
+
+
+
+
+
+
 
 
 # Evaluate the model
