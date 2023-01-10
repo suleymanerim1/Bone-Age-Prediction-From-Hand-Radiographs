@@ -1,12 +1,14 @@
 # Import Packages
 import tensorflow as tf
 from tensorflow import keras
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import os
 import numpy as np
+from IPython.display import Image
+
+import cnn_models
 import utils
 import dnn_models
-
 
 # Create train dataset
 train_path = 'Bone Age Datasets\\train'
@@ -30,7 +32,7 @@ for path in data_paths:
     image_file_list, features = utils.image_csv_match(path[0], path[1])
 
     # create a tf.dataset of test images
-    images_dataset = utils.image_dataset_creator_from_path(image_file_list,Input_Size)
+    images_dataset = utils.image_dataset_creator_from_path(image_file_list, Input_Size)
 
     # get age from features
     age = (features[:, -1]).astype(float)
@@ -43,7 +45,7 @@ for path in data_paths:
     gender_dataset = tf.data.Dataset.from_tensor_slices(gender)
 
     # Create a dataset of images zipped with age
-    datasets.append(tf.data.Dataset.zip((images_dataset,gender_dataset, age_dataset)))
+    datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
 
 train_dataset = datasets[0]
 val_dataset = datasets[1]
@@ -65,49 +67,40 @@ test_dataset = utils.create_dataset(test_dataset,
                                     cache_file='test_cache')
 
 
-model = dnn_models.DNN_Model((Input_Size, Input_Size, 3))
+print(train_dataset)
+print(val_dataset)
+print(test_dataset)
 
+
+model = cnn_models.LeNet_Model((Input_Size, Input_Size, 3))
 
 num_params = model.count_params()
-print(f'Number of parameters: {num_params:,}')
+print(f'Number of parameters: {num_params:,}\n')
 
 utils.print_memory_info()
-
 model.summary()
 
 # Create a callback that will interrupt training when the validation loss stops improving
 early_stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, restore_best_weights=True)
 
-adam_optimizer = keras.optimizers.Adam(learning_rate=0.001)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
+                              patience=5, min_lr=0.001,verbose=1)
+
+epochs = 25
+initial_lrate = 0.1
+
+adam_optimizer = keras.optimizers.Adam(learning_rate=initial_lrate)
 # Compile the model
 model.compile(optimizer=adam_optimizer, loss=tf.keras.losses.MeanAbsoluteError(),
-                  metrics=tf.keras.metrics.mean_absolute_error)
-
+              metrics=tf.keras.metrics.mean_absolute_error)
 
 # Train the model
-# hist = model.fit(train_dataset, epochs=200,
-#                      validation_data=val_dataset,
-#                      callbacks=[early_stopping],
-#                      use_multiprocessing=True,
-#                      workers=os.cpu_count()
-#                      )
-
-
-# Apply the unzip_fn to each element of the dataset
-unzipped_train = train_dataset.map(utils.unzip_dataset)
-unzipped_val = val_dataset.map(utils.unzip_dataset)
-
-# Now that the dataset is unzipped, you can pass the images, features and output to model.fit
-hist = model.fit(x=[unzipped_train[0],unzipped_train[1]],y=unzipped_train[2],
-          validation_data=([unzipped_val[0],unzipped_val[1]],unzipped_val[2]),
-          epochs=5)
-
-
-
-
-
-
-
+hist = model.fit(train_dataset, epochs=500,
+                 validation_data=val_dataset,
+                 callbacks=[early_stopping, reduce_lr],
+                 use_multiprocessing=True,
+                 workers=os.cpu_count()
+                 )
 
 # Evaluate the model
 test_mae = model.evaluate(test_dataset, workers=-1)
@@ -118,10 +111,13 @@ print("-----------------------------------------------")
 
 utils.hist_graphs(hist)
 
-
 # Save the model in HDF5 format
-tf.keras.models.save_model(model, './denememodel/model.h5')
+keras.models.save_model(model, './denememodel/model.h5')
 np.save('./denememodel/dnn_history.npy', hist.history)
+# Show the structure of the model through building blocks
+keras.utils.plot_model(model, to_file='./denememodel/dnn_model.png')
+Image("./denememodel/dnn_model.png")
+
 
 # Restore the model from the HDF5 file
 # model = tf.keras.models.load_model('./denememodel/model.h5')

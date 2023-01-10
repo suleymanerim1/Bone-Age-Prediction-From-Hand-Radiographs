@@ -136,7 +136,7 @@ def create_dataset(dataset, batch_size, shuffle=False, augment=False, cache_file
         dataset = dataset.shuffle(batch_size * 5)
 
     # Repeat the dataset indefinitely
-    dataset = dataset.repeat(2)
+    dataset = dataset.repeat(5)
 
     # Batch
     dataset = dataset.batch(batch_size=batch_size)
@@ -192,6 +192,5 @@ def hist_graphs(hist):
 
 # Define a function to unzip the dataset
 def unzip_dataset(zip_element):
-    images, feature_and_output = zip_element
-    feature, output = feature_and_output
+    images, feature, output = zip_element
     return images, feature, output
