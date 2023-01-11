@@ -136,7 +136,7 @@ def create_dataset(dataset, batch_size, shuffle=False, augment=False, cache_file
         dataset = dataset.shuffle(batch_size * 5)
 
     # Repeat the dataset indefinitely
-    dataset = dataset.repeat(5)
+    dataset = dataset.repeat(2)
 
     # Batch
     dataset = dataset.batch(batch_size=batch_size)

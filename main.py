@@ -72,7 +72,7 @@ print(val_dataset)
 print(test_dataset)
 
 
-model = cnn_models.LeNet_Model((Input_Size, Input_Size, 3))
+model = cnn_models.AlexNet_Model((Input_Size, Input_Size, 3))
 
 num_params = model.count_params()
 print(f'Number of parameters: {num_params:,}\n')
@@ -81,12 +81,11 @@ utils.print_memory_info()
 model.summary()
 
 # Create a callback that will interrupt training when the validation loss stops improving
-early_stopping = EarlyStopping(monitor='val_loss', patience=10, verbose=1, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
                               patience=5, min_lr=0.001,verbose=1)
 
-epochs = 25
 initial_lrate = 0.1
 
 adam_optimizer = keras.optimizers.Adam(learning_rate=initial_lrate)
@@ -112,11 +111,11 @@ print("-----------------------------------------------")
 utils.hist_graphs(hist)
 
 # Save the model in HDF5 format
-keras.models.save_model(model, './denememodel/model.h5')
-np.save('./denememodel/dnn_history.npy', hist.history)
+keras.models.save_model(model, './denememodel/dummymodel.h5')
+np.save('./denememodel/dummyhistory.npy', hist.history)
 # Show the structure of the model through building blocks
-keras.utils.plot_model(model, to_file='./denememodel/dnn_model.png')
-Image("./denememodel/dnn_model.png")
+keras.utils.plot_model(model, to_file='./denememodel/dummymodel.png')
+Image("./denememodel/dummymodel.png")
 
 
 # Restore the model from the HDF5 file

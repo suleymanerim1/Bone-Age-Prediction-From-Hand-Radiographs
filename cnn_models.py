@@ -1,6 +1,6 @@
-
 import tensorflow as tf
 from tensorflow import keras
+
 
 # LeNet Model
 def LeNet_Model(input_shape):
@@ -32,12 +32,10 @@ def LeNet_Model(input_shape):
     # Flatten tensor
     X = keras.layers.Flatten()(X)
 
-
     Y_input = keras.Input(1)
     Y = keras.layers.Dense(32, activation='relu')(Y_input)
 
     Z = keras.layers.concatenate(inputs=[X, Y])
-
 
     # Add fully-connected dense layer with 84 units and hyperbolic tangent activation
     Z = keras.layers.Dense(84, activation='tanh')(Z)
@@ -49,6 +47,7 @@ def LeNet_Model(input_shape):
     model = keras.Model(inputs=[X_input, Y_input], outputs=Z, name='leNet')
 
     return model
+
 
 def Conv(X, conv_feature_maps=4, conv_kernel=(3, 3), conv_strides=(1, 1),
          conv_padding='same', activation='relu',
@@ -64,12 +63,11 @@ def Conv(X, conv_feature_maps=4, conv_kernel=(3, 3), conv_strides=(1, 1),
     """
     # CONV -> Batch Normalization -> ReLU Block applied to X (3 lines of code)
     X = keras.layers.Conv2D(conv_feature_maps, conv_kernel,
-                               strides=conv_strides, padding=conv_padding, activation=None, name=name)(X)
+                            strides=conv_strides, padding=conv_padding, activation=None, name=name)(X)
     X = keras.layers.BatchNormalization(axis=-1)(X)
     X = keras.layers.Activation(activation)(X)
 
     return X
-
 
 
 def ConvPool(X, conv_feature_maps=4, conv_kernel=(3, 3), conv_strides=(1, 1), conv_padding='same', activation='relu',
@@ -86,7 +84,7 @@ def ConvPool(X, conv_feature_maps=4, conv_kernel=(3, 3), conv_strides=(1, 1), co
 
     # CONV -> Batch Normalization -> ReLU Block applied to X (3 lines of code)
     X = keras.layers.Conv2D(conv_feature_maps, conv_kernel,
-                               strides=conv_strides, padding=conv_padding, activation=None, name=name)(X)
+                            strides=conv_strides, padding=conv_padding, activation=None, name=name)(X)
     X = keras.layers.BatchNormalization(axis=-1)(X)
     X = keras.layers.Activation(activation)(X)
 
@@ -145,4 +143,64 @@ def CNN_Model(input_shape):
     return model
 
 
+def AlexNet_Model(input_shape):
+    X_input = keras.Input(input_shape)
 
+    # 1st layer (conv + pool + batchnorm)
+    X = keras.layers.Conv2D(filters=96, kernel_size=(11, 11), strides=(4, 4), padding='valid',
+                            kernel_regularizer=keras.regularizers.l2(0.0005))(X_input)
+    X = keras.layers.Activation('relu')(X)
+    X = keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2, 2), padding='valid')(X)
+    X = keras.layers.BatchNormalization()(X)
+
+    # 2nd layer (conv + pool + batchnorm)
+    X = keras.layers.Conv2D(filters=256, kernel_size=(5, 5), strides=(1, 1), padding='same',
+                            kernel_regularizer=keras.regularizers.l2(0.0005))(X)
+    X = keras.layers.Activation('relu')(X)
+    X = keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2, 2), padding='valid')(X)
+    X = keras.layers.BatchNormalization()(X)
+
+    # layer 3 (conv + batchnorm)      <--- note that the authors did not add a POOL layer here
+    X = keras.layers.Conv2D(filters=384, kernel_size=(3, 3), strides=(1, 1), padding='same',
+                            kernel_regularizer=keras.regularizers.l2(0.0005))(X)
+    X = keras.layers.Activation('relu')(X)
+    X = keras.layers.BatchNormalization()(X)
+
+    # layer 4 (conv + batchnorm)      <--- similar to layer 3
+    X = keras.layers.Conv2D(filters=384, kernel_size=(3, 3), strides=(1, 1), padding='same',
+                            kernel_regularizer=keras.regularizers.l2(0.0005))(X)
+    X = keras.layers.Activation('relu')(X)
+    X = keras.layers.BatchNormalization()(X)
+
+    # layer 5 (conv + batchnorm)
+    X = keras.layers.Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), padding='same',
+                            kernel_regularizer=keras.regularizers.l2(0.0005))(X)
+    X = keras.layers.Activation('relu')(X)
+    X = keras.layers.BatchNormalization()(X)
+    X = keras.layers.MaxPool2D(pool_size=(3, 3), strides=(2, 2), padding='valid')(X)
+
+    # Flatten the CNN output to feed it with fully connected layers
+    X = keras.layers.Flatten()(X)
+
+    # Gender information layer 1
+    Y_input = keras.Input(1)
+    Y = keras.layers.Dense(32, activation='relu')(Y_input)
+
+    # Concatenate Image features with gender features
+    Z = keras.layers.concatenate(inputs=[X, Y])
+
+    # layer 6 (Dense layer + dropout)
+    Z = keras.layers.Dense(4096, activation='relu')(Z)
+    Z = keras.layers.Dropout(0.5)(Z)
+
+    # layer 7 (Dense layer + dropout)
+    Z = keras.layers.Dense(4096, activation='relu')(Z)
+    Z = keras.layers.Dropout(0.5)(Z)
+
+    # layer 8 (softmax output layer)
+    output = keras.layers.Dense(1)(Z)
+
+    # Create model. This creates your Keras model instance, you'll use this instance to train/test the model.
+    model = keras.Model(inputs=[X_input, Y_input], outputs=output, name='AlexNet')
+
+    return model
