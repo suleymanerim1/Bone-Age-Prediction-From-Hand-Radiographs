@@ -68,7 +68,6 @@ def image_dataset_creator_from_path(image_file_list, Input_size=224):
         :param Input_size:
         :param image_file_list:
     """
-    Input_size = 224
     # Create a dataset from the list of image paths
     dataset = tf.data.Dataset.from_tensor_slices(image_file_list)
 
@@ -137,7 +136,7 @@ def create_dataset(dataset, batch_size, shuffle=False, augment=False, cache_file
         dataset = dataset.shuffle(batch_size * 5)
 
     # Repeat the dataset indefinitely
-    dataset = dataset.repeat(2)
+    dataset = dataset.repeat()
 
     # Batch
     dataset = dataset.batch(batch_size=batch_size)

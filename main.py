@@ -1,15 +1,15 @@
 # Import Packages
-import tensorflow as tf
-from tensorflow import keras
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import os
-import numpy as np
-from IPython.display import Image
-from model_trials import trial_model
 
-import cnn_models
+import numpy as np
+import tensorflow as tf
+from IPython.display import Image
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow import keras
+from keras_visualizer import visualizer
+
 import utils
-import dnn_models
+from model_trials import trial_model
 
 # Create train dataset
 train_path = 'Bone Age Datasets\\train'
@@ -28,6 +28,7 @@ val = (validation_path, validation_csv_path)
 test = (test_path, test_csv_path)
 data_paths = [train, val, test]
 datasets = []
+len_dataset = []
 for path in data_paths:
     # return images paths list and features (id,male,age)
     image_file_list, features = utils.image_csv_match(path[0], path[1])
@@ -46,14 +47,20 @@ for path in data_paths:
     gender_dataset = tf.data.Dataset.from_tensor_slices(gender)
 
     # Create a dataset of images zipped with age
-    #datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
+    # datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
     datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
+
+    len_dataset.append(len(gender))
 
 train_dataset = datasets[0]
 val_dataset = datasets[1]
 test_dataset = datasets[2]
 
-batch_size = 64
+train_len = len_dataset[0]
+val_len = len_dataset[1]
+test_len = len_dataset[2]
+
+batch_size = 32
 train_dataset = utils.create_dataset(train_dataset,
                                      batch_size=batch_size,
                                      shuffle=False,
@@ -68,11 +75,13 @@ test_dataset = utils.create_dataset(test_dataset,
                                     batch_size=batch_size,
                                     cache_file='test_cache')
 
+train_steps = int(np.ceil(train_len / batch_size))
+val_steps = int(np.ceil(val_len / batch_size))
+test_steps = int(np.ceil(test_len / batch_size))
 
 print(train_dataset)
 print(val_dataset)
 print(test_dataset)
-
 
 model = trial_model((Input_Size, Input_Size, 3))
 
@@ -86,7 +95,7 @@ model.summary()
 early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1),
-                              patience=5, min_lr=0.5e-6,verbose=1)
+                              patience=3, min_lr=0.5e-6, verbose=1)
 
 initial_lrate = 0.1
 
@@ -96,15 +105,17 @@ model.compile(optimizer=adam_optimizer, loss=tf.keras.losses.MeanAbsoluteError()
               metrics=tf.keras.metrics.mean_absolute_error)
 
 # Train the model
-hist = model.fit(train_dataset, epochs=500,
+hist = model.fit(train_dataset, epochs=200,
+                 steps_per_epoch=train_steps,
                  validation_data=val_dataset,
-                 callbacks=[early_stopping, reduce_lr],
+                 validation_steps=val_steps,
+                 callbacks=[reduce_lr, early_stopping],
                  use_multiprocessing=True,
                  workers=os.cpu_count()
                  )
 
 # Evaluate the model
-test_mae = model.evaluate(test_dataset, workers=-1)
+test_mae = model.evaluate(test_dataset, steps=test_steps, workers=-1)
 print('Test loss:', test_mae)
 
 print("\n")
@@ -116,7 +127,7 @@ utils.hist_graphs(hist)
 keras.models.save_model(model, './denememodel/dummymodel.h5')
 np.save('./denememodel/dummyhistory.npy', hist.history)
 # Show the structure of the model through building blocks
-keras.utils.plot_model(model, to_file='./denememodel/dummymodel.png')
+keras.utils.plot_model(model, to_file='./denememodel/dummymodel.png', show_shapes=True)
 Image("./denememodel/dummymodel.png")
 
 

@@ -2,7 +2,7 @@ from keras.layers import Input, Add, Dense, Activation, BatchNormalization, Flat
     MaxPooling2D
 from keras.models import Model
 from tensorflow.python.ops.init_ops_v2 import glorot_uniform
-
+from keras.regularizers import L2
 
 def bottleneck_residual_block(X, f, filters, stage, block, reduce=False, s=2):
     """
@@ -33,26 +33,25 @@ def bottleneck_residual_block(X, f, filters, stage, block, reduce=False, s=2):
     if reduce:
         # if we are to reduce the spatial size, apply a 1x1 CONV layer to the shortcut path
         # to do that, we need both CONV layers to have similar strides
-        X = Conv2D(filters=F1, kernel_size=(1, 1), strides=(s, s), padding='valid', name=conv_name_base + '2a' )(X)
+        X = Conv2D(filters=F1, kernel_size=(1, 1), strides=(s, s), padding='valid',kernel_regularizer=L2(0.0001), name=conv_name_base + '2a' )(X)
         X = BatchNormalization(axis=3, name=bn_name_base + '2a')(X)
         X = Activation('relu')(X)
 
-        X_shortcut = Conv2D(filters=F3, kernel_size=(1, 1), strides=(s, s), padding='valid', name=conv_name_base + '1')(X_shortcut)
+        X_shortcut = Conv2D(filters=F3, kernel_size=(1, 1), strides=(s, s), padding='valid',kernel_regularizer=L2(0.0001), name=conv_name_base + '1')(X_shortcut)
         X_shortcut = BatchNormalization(axis=3, name=bn_name_base + '1')(X_shortcut)
     else:
         # First component of main path
-        X = Conv2D(filters=F1, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2a',
-                )(X)
+        X = Conv2D(filters=F1, kernel_size=(1, 1), strides=(1, 1), padding='valid',kernel_regularizer=L2(0.0001), name=conv_name_base + '2a')(X)
         X = BatchNormalization(axis=3, name=bn_name_base + '2a')(X)
         X = Activation('relu')(X)
 
     # Second component of main path
-    X = Conv2D(filters=F2, kernel_size=(f, f), strides=(1, 1), padding='same', name=conv_name_base + '2b')(X)
+    X = Conv2D(filters=F2, kernel_size=(f, f), strides=(1, 1), padding='same',kernel_regularizer=L2(0.0001), name=conv_name_base + '2b')(X)
     X = BatchNormalization(axis=3, name=bn_name_base + '2b')(X)
     X = Activation('relu')(X)
 
     # Third component of main path
-    X = Conv2D(filters=F3, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2c')(X)
+    X = Conv2D(filters=F3, kernel_size=(1, 1), strides=(1, 1), padding='valid',kernel_regularizer=L2(0.0001), name=conv_name_base + '2c')(X)
     X = BatchNormalization(axis=3, name=bn_name_base + '2c')(X)
 
     # Final step: Add shortcut value to main path, and pass it through a RELU activation
@@ -122,6 +121,4 @@ resnet_model = ResNet50(input_shape=(224, 224, 3), classes=1)
 
 #resnet_model.summary()
 
-#from keras.utils import plot_model
 
-#plot_model(model, to_file="./denememodel//resnet50.png", show_shapes=True)
