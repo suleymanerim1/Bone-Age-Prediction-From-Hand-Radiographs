@@ -5,6 +5,7 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import os
 import numpy as np
 from IPython.display import Image
+from model_trials import trial_model
 
 import cnn_models
 import utils
@@ -45,7 +46,8 @@ for path in data_paths:
     gender_dataset = tf.data.Dataset.from_tensor_slices(gender)
 
     # Create a dataset of images zipped with age
-    datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
+    #datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
+    datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
 
 train_dataset = datasets[0]
 val_dataset = datasets[1]
@@ -72,7 +74,7 @@ print(val_dataset)
 print(test_dataset)
 
 
-model = cnn_models.VGG16_Model((Input_Size, Input_Size, 3))
+model = trial_model((Input_Size, Input_Size, 3))
 
 num_params = model.count_params()
 print(f'Number of parameters: {num_params:,}\n')

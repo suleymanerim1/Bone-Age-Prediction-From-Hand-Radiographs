@@ -56,7 +56,7 @@ def image_csv_match(image_path, csv_path):
     return image_file_list, np.array(features).squeeze()
 
 
-def image_dataset_creator_from_path(image_file_list,Input_size = 224):
+def image_dataset_creator_from_path(image_file_list, Input_size=224):
     """
     Creates a dataset from a list of image file paths. The images are read, decoded, resized, and standardized.
 
@@ -65,6 +65,7 @@ def image_dataset_creator_from_path(image_file_list,Input_size = 224):
 
     Returns:
         A TensorFlow dataset containing the images.
+        :param Input_size:
         :param image_file_list:
     """
     Input_size = 224
@@ -73,7 +74,6 @@ def image_dataset_creator_from_path(image_file_list,Input_size = 224):
 
     # Define a function to read and decode an image
     def read_and_decode_image(image_path):
-
         # Read the image file
         image_string = tf.io.read_file(image_path)
         # Decode the image
@@ -110,6 +110,7 @@ def data_augmentation(images):
 
 # Create Dataset
 AUTOTUNE = tf.data.AUTOTUNE
+
 
 def create_dataset(dataset, batch_size, shuffle=False, augment=False, cache_file=None):
     """
@@ -189,6 +190,7 @@ def hist_graphs(hist):
     ax1.legend(['Training', 'Validation'], loc='upper left')
 
     plt.show()
+
 
 # Define a function to unzip the dataset
 def unzip_dataset(zip_element):
