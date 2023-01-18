@@ -15,6 +15,14 @@ def trial_model(input_shape):
                          filters_pool_proj=32,
                          name='inception_1')
 
+    X = inception.inception_module(X,
+                         filters_1x1=64,
+                         filters_3x3_reduce=96,
+                         filters_3x3=128,
+                         filters_5x5_reduce=16,
+                         filters_5x5=32,
+                         filters_pool_proj=32,
+                         name='inception_2')
 
     # Create the model
     model = Model(inputs=X_input, outputs=X, name='trial')
