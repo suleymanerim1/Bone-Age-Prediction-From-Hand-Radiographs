@@ -72,7 +72,7 @@ print(val_dataset)
 print(test_dataset)
 
 
-model = cnn_models.AlexNet_Model((Input_Size, Input_Size, 3))
+model = cnn_models.VGG16_Model((Input_Size, Input_Size, 3))
 
 num_params = model.count_params()
 print(f'Number of parameters: {num_params:,}\n')
@@ -83,8 +83,8 @@ model.summary()
 # Create a callback that will interrupt training when the validation loss stops improving
 early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
-                              patience=5, min_lr=0.001,verbose=1)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1),
+                              patience=5, min_lr=0.5e-6,verbose=1)
 
 initial_lrate = 0.1
 
