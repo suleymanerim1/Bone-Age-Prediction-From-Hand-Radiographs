@@ -1,4 +1,5 @@
 # Import Packages
+import datetime
 import os
 
 import numpy as np
@@ -6,10 +7,9 @@ import tensorflow as tf
 from IPython.display import Image
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow import keras
-from keras_visualizer import visualizer
 
 import utils
-from model_trials import trial_model
+from model_trials import trial_model, model_no_dropout_skip_bn_weightdecay
 
 # Create train dataset
 train_path = 'Bone Age Datasets\\train'
@@ -83,20 +83,23 @@ print(train_dataset)
 print(val_dataset)
 print(test_dataset)
 
-model = trial_model((Input_Size, Input_Size, 3))
+model = model_no_dropout_skip_bn_weightdecay((Input_Size, Input_Size, 3))
 
 num_params = model.count_params()
 print(f'Number of parameters: {num_params:,}\n')
 
-utils.print_memory_info()
 model.summary()
 
 # Create a callback that will interrupt training when the validation loss stops improving
 early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
+# tensorboard
+log_dir = "./logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
+
+# learning rate schedule
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1),
                               patience=3, min_lr=0.5e-6, verbose=1)
-
 initial_lrate = 0.1
 
 adam_optimizer = keras.optimizers.Adam(learning_rate=initial_lrate)
@@ -109,7 +112,7 @@ hist = model.fit(train_dataset, epochs=200,
                  steps_per_epoch=train_steps,
                  validation_data=val_dataset,
                  validation_steps=val_steps,
-                 callbacks=[reduce_lr, early_stopping],
+                 callbacks=[reduce_lr, early_stopping, tensorboard_callback],
                  use_multiprocessing=True,
                  workers=os.cpu_count()
                  )
@@ -123,15 +126,28 @@ print("-----------------------------------------------")
 
 utils.hist_graphs(hist)
 
-# Save the model in HDF5 format
-keras.models.save_model(model, './denememodel/dummymodel.h5')
-np.save('./denememodel/dummyhistory.npy', hist.history)
-# Show the structure of the model through building blocks
-keras.utils.plot_model(model, to_file='./denememodel/dummymodel.png', show_shapes=True)
-Image("./denememodel/dummymodel.png")
 
+path = './denememodel/'
+path_real = './my_models/'
+# Save the model in HDF5 format
+keras.models.save_model(model, filepath=path + 'dummymodel.h5')
+# save the history
+np.save(file=path + 'dummyhistory.npy', arr=hist.history)
+# save best epoch
+np.save(file=path + 'best_epoch.npy', arr=early_stopping.best_epoch)
+# Show the structure of the model through building blocks
+keras.utils.plot_model(model, to_file=path + 'dummymodel.png', show_shapes=True)
+Image(path + 'dummymodel.png')
 
 # Restore the model from the HDF5 file
-# model = tf.keras.models.load_model('./denememodel/model.h5')
+# model = tf.keras.models.load_model(path + 'model.h5')
 # Get back the history
-# history1=np.load('./denememodel/history1.npy',allow_pickle='TRUE').item()
+# history1=np.load(file = path + 'history1.npy',allow_pickle='TRUE').item()
+# Get back the best epoch
+# best_epoch = np.load(file = path + 'best_epoch.npy',allow_pickle='TRUE').item()
+
+
+# number of parameters
+# model.count_params()
+
+# tensorboard --logdir C:\Users\erim_\PycharmProjects\HDAProject\logs\fit

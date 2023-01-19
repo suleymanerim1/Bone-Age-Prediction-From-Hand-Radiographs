@@ -8,6 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 
+
 # Load Datasets
 def image_csv_match(image_path, csv_path):
     """
@@ -181,6 +182,7 @@ def hist_graphs(hist):
     fig, (ax1) = plt.subplots(1, 1, figsize=(12, 4))
 
     # Plot the loss for the training and validation sets
+    plt.ylim((0,50))
     ax1.plot(loss)
     ax1.plot(val_loss)
     ax1.set_title('Model loss')
@@ -190,8 +192,3 @@ def hist_graphs(hist):
 
     plt.show()
 
-
-# Define a function to unzip the dataset
-def unzip_dataset(zip_element):
-    images, feature, output = zip_element
-    return images, feature, output
