@@ -9,7 +9,7 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow import keras
 
 import utils
-from model_trials import trial_model, model_no_dropout_skip_bn_weightdecay
+import model_trials
 
 # Create train dataset
 train_path = 'Bone Age Datasets\\train'
@@ -83,7 +83,8 @@ print(train_dataset)
 print(val_dataset)
 print(test_dataset)
 
-model = model_no_dropout_skip_bn_weightdecay((Input_Size, Input_Size, 3))
+tf.keras.backend.clear_session()
+model = model_trials.model5((Input_Size, Input_Size, 3))
 
 num_params = model.count_params()
 print(f'Number of parameters: {num_params:,}\n')

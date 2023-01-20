@@ -231,6 +231,6 @@ def ResNet50(input_shape, classes):
     return model
 
 
-resnet_model = ResNet50(input_shape=(224, 224, 3), classes=1)
+#resnet_model = ResNet50(input_shape=(224, 224, 3), classes=1)
 
 # resnet_model.summary()

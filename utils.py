@@ -182,13 +182,13 @@ def hist_graphs(hist):
     fig, (ax1) = plt.subplots(1, 1, figsize=(12, 4))
 
     # Plot the loss for the training and validation sets
-    plt.ylim((0,50))
     ax1.plot(loss)
     ax1.plot(val_loss)
     ax1.set_title('Model loss')
     ax1.set_ylabel('Loss')
     ax1.set_xlabel('Epoch')
     ax1.legend(['Training', 'Validation'], loc='upper left')
+    plt.ylim((0,50))
 
     plt.show()
 
