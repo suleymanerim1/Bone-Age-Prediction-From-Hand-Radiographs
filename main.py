@@ -47,8 +47,8 @@ for path in data_paths:
     gender_dataset = tf.data.Dataset.from_tensor_slices(gender)
 
     # Create a dataset of images zipped with age
-    # datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
-    datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
+    datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
+    #datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
 
     len_dataset.append(len(gender))
 
@@ -84,7 +84,7 @@ print(val_dataset)
 print(test_dataset)
 
 tf.keras.backend.clear_session()
-model = model_trials.model5((Input_Size, Input_Size, 3))
+model = model_trials.model18((Input_Size, Input_Size, 3))
 
 num_params = model.count_params()
 print(f'Number of parameters: {num_params:,}\n')
