@@ -1,4 +1,5 @@
-import keras.layers
+from keras import layers
+import keras
 from keras.layers import Input, Conv2D, MaxPool2D, AveragePooling2D, Dense, Dropout, Flatten, BatchNormalization, \
     Activation, Add, concatenate
 from keras.models import Model
@@ -1040,80 +1041,6 @@ def model13(input_shape):
 
     return model
 
-def model_yes_reg_bn_no_skip(input_shape):
-    X_input = Input(input_shape, name='Input')
-
-    # first stage
-    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same',
-               name='st1_conv1',kernel_regularizer=L2(0.0001), kernel_initializer=glorot_uniform(seed=0))(X_input)
-    X = BatchNormalization(axis=3, name='st1_batch_norm1')(X)
-    X = Activation('relu',name='st1_relu1')(X)
-    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv2',kernel_regularizer=L2(0.0001))(X)
-    X = BatchNormalization(axis=3, name='st1_batch_norm2')(X)
-    X = Activation('relu',name='st1_relu2')(X)
-    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st1_max_pool1')(X)
-
-    # second stage
-    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
-               name='st2_conv1',kernel_regularizer=L2(0.0001))(X)
-    X = BatchNormalization(axis=3, name='st2_batch_norm1')(X)
-    X = Activation('relu',name='st2_relu1')(X)
-    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
-               name='st2_conv2',kernel_regularizer=L2(0.0001))(X)
-    X = BatchNormalization(axis=3, name='st2_batch_norm2')(X)
-    X = Activation('relu',name='st2_relu2')(X)
-    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st2_max_pool')(X)
-
-    # third stage
-    X = inception_module_with_bn(X,
-                                                        filters_1x1=64,
-                                                        filters_3x3_reduce=32,
-                                                        filters_3x3=64,
-                                                        filters_5x5_reduce=16,
-                                                        filters_5x5=64,
-                                                        filters_pool_proj=64,
-                                                        name='st3_inception1_')
-    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st3_max_pool1')(X)
-
-    # forth stage
-    X = inception_module_with_bn(X,
-                                                        filters_1x1=96,
-                                                        filters_3x3_reduce=64,
-                                                        filters_3x3=128,
-                                                        filters_5x5_reduce=32,
-                                                        filters_5x5=64,
-                                                        filters_pool_proj=64,
-                                                        name='st4_inception1_')
-    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st4_max_pool1')(X)
-
-    # fifth stage
-    X = Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st5_conv1',kernel_regularizer=L2(0.0001))(X)
-    X = BatchNormalization(axis=3, name='st5_batch_norm1')(X)
-    X = Activation('relu',name='st5_relu1')(X)
-    X = Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st5_conv2',kernel_regularizer=L2(0.0001))(X)
-    X = BatchNormalization(axis=3, name='st5_batch_norm2')(X)
-    X = Activation('relu',name='st5_relu2')(X)
-    X = Conv2D(filters=256, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st5_conv3',kernel_regularizer=L2(0.0001))(X)
-    X = BatchNormalization(axis=3, name='st5_batch_norm3')(X)
-    X = Activation('relu',name='st5_relu3')(X)
-
-    X = AveragePooling2D(pool_size=(7, 7), strides=1, padding='valid', name='average_pool')(X)
-
-    X = Flatten(name='Flatten')(X)
-    X = Dropout(0.5, name='dropout-1')(X)
-    X = Dense(1000, activation='relu', name='dense-1',
-              kernel_initializer=glorot_uniform(seed=0))(X)
-    X = Dropout(0.5, name='dropout-2')(X)
-    X = Dense(256, activation='relu', name='dense-2')(X)
-    X = Dropout(0.2, name='dropout-3')(X)
-    X = Dense(1, name='output')(X)
-
-    # Create the model
-    model = Model(inputs=X_input, outputs=X, name='trial')
-
-    return model
-
-
 
 # model 14
 # 7 stages, yes batch norm, yes skip, no reg, no inception
@@ -1519,6 +1446,101 @@ def model18(input_shape):
     return model
 
 
+# model 19
+# 7 stages, yes batch norm, yes skip, yes reg
+def model19(input_shape):
+    X_input = Input(input_shape, name='Input')
+
+    # first stage
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st1_conv1', kernel_initializer=glorot_uniform(seed=0))(X_input)
+    X = BatchNormalization(axis=3, name='st1_batch_norm1')(X)
+    X = Activation('relu',name='st1_relu1')(X)
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv2')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm2')(X)
+    X = Activation('relu',name='st1_relu2')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st1_max_pool1')(X)
+
+    # second stage
+    X = Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv1')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm1')(X)
+    X = Activation('relu',name='st2_relu1')(X)
+    X = Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv2')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm2')(X)
+    X = Activation('relu',name='st2_relu2')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st2_max_pool')(X)
+
+    # third stage
+    X = inception_module_without_bn_without_weightdecay(X,
+                                                        filters_1x1=64,
+                                                        filters_3x3_reduce=32,
+                                                        filters_3x3=64,
+                                                        filters_5x5_reduce=16,
+                                                        filters_5x5=64,
+                                                        filters_pool_proj=64,
+                                                        name='st3_inception1_')
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st3_max_pool1')(X)
+
+    # forth stage
+    X = inception_module_without_bn_without_weightdecay(X,
+                                                        filters_1x1=96,
+                                                        filters_3x3_reduce=64,
+                                                        filters_3x3=128,
+                                                        filters_5x5_reduce=32,
+                                                        filters_5x5=64,
+                                                        filters_pool_proj=64,
+                                                        name='st4_inception1_')
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st4_max_pool1')(X)
+
+
+
+    # fifth stage
+    X = bottleneck_residual_block_without_bn_without_weightdecay(X, 3, [256, 256, 256], stage=5, block='a', reduce=True,
+                                                                 s=2)
+
+    # sixth stage
+    X = bottleneck_residual_block_without_bn_without_weightdecay(X, 3, [256, 256, 512], stage=6, block='a',reduce=True,
+                                                              s=2)
+
+    # seventh stage
+    X = Flatten()(X)
+    X = Dense(1000, activation='relu', name='dense-1',
+              kernel_initializer=glorot_uniform(seed=0))(X)
+    X = Dense(512, activation='relu', name='dense-2')(X)
+    X = Dense(128, activation='relu', name='dense-3')(X)
+    X = Dense(1, name='output')(X)
+
+    # Create the model
+    model = Model(inputs=X_input, outputs=X, name='trial')
+
+    return model
+
+
+# model 20
+# resnet transfer-learning
+def model20(input_shape):
+    # Create base model
+    base_model = keras.applications.ResNet50(
+    include_top=False,
+    weights="imagenet",
+    input_tensor=None,
+    input_shape=input_shape,
+    pooling=None,
+    classes=1,
+)
+    # Freeze base model
+    base_model.trainable = False
+
+    # Create new model on top.
+    X_input = Input(input_shape, name='Input')
+    X = base_model(X_input, training=False)
+    X = keras.layers.GlobalAveragePooling2D()(X)
+    X = keras.layers.Dense(1)(X)
+    model = keras.Model(X_input, X)
+
+    return model
 
 def trial_model(input_shape):
     X_input = Input(input_shape, name='Input')
@@ -1602,7 +1624,12 @@ def trial_model(input_shape):
 
     return model
 
-model = model17(input_shape=(224, 224, 3))
-num_params = model.count_params()
-print(f'Number of parameters: {num_params:,}\n')
-model.summary()
+
+
+
+#model = model6(input_shape=(224, 224, 3))
+#num_params = model.count_params()
+#print(f'Number of parameters: {num_params:,}\n')
+#model.summary()
+
+

@@ -94,16 +94,17 @@ def image_dataset_creator_from_path(image_file_list, Input_size=224):
 # Augmentation
 def data_augmentation(images):
     # Randomly flip the images horizontally
-    images = tf.image.random_flip_left_right(images)
+    seed = (1, 2)
+    images = tf.image.stateless_random_flip_left_right(images,seed)
 
     # Randomly adjust the brightness of the images
-    images = tf.image.random_brightness(images, max_delta=0.5)
+    seed = (1, 2)
+    images = tf.image.stateless_random_saturation(images, 0, 0.25,seed)
 
     # Randomly adjust the contrast of the images
-    images = tf.image.random_contrast(images, lower=0.4, upper=0.8)
+    seed = (1, 2)
+    images = tf.image.stateless_random_contrast(images, 0, 0.25,seed)
 
-    # Randomly rotate the images
-    # images = tf.image.rot90(images, tf.random.uniform(shape=[], minval=0, maxval=4, dtype=tf.int32))
 
     return images
 

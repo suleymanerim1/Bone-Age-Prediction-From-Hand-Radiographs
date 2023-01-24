@@ -10,8 +10,9 @@ from tensorflow import keras
 
 import utils
 import model_trials
+import dnn_models
 
-# Create train dataset
+#Create dataset paths
 train_path = 'Bone Age Datasets\\train'
 train_csv_path = 'Bone Age Datasets\\train.csv'
 
@@ -29,6 +30,8 @@ test = (test_path, test_csv_path)
 data_paths = [train, val, test]
 datasets = []
 len_dataset = []
+
+# Read images and information from paths
 for path in data_paths:
     # return images paths list and features (id,male,age)
     image_file_list, features = utils.image_csv_match(path[0], path[1])
@@ -47,11 +50,12 @@ for path in data_paths:
     gender_dataset = tf.data.Dataset.from_tensor_slices(gender)
 
     # Create a dataset of images zipped with age
-    datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
-    #datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
+    #datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
+    datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
 
     len_dataset.append(len(gender))
 
+# Create Datasets
 train_dataset = datasets[0]
 val_dataset = datasets[1]
 test_dataset = datasets[2]
@@ -75,22 +79,24 @@ test_dataset = utils.create_dataset(test_dataset,
                                     batch_size=batch_size,
                                     cache_file='test_cache')
 
-train_steps = int(np.ceil(train_len / batch_size))
-val_steps = int(np.ceil(val_len / batch_size))
-test_steps = int(np.ceil(test_len / batch_size))
+number_train_repeat = 1
+train_steps = int(np.ceil(train_len / batch_size))*number_train_repeat
+val_steps = int(np.ceil(val_len / batch_size))*number_train_repeat
+test_steps = int(np.ceil(test_len / batch_size))*number_train_repeat
 
 print(train_dataset)
 print(val_dataset)
 print(test_dataset)
 
 tf.keras.backend.clear_session()
-model = model_trials.model18((Input_Size, Input_Size, 3))
+model = model_trials.model20((Input_Size, Input_Size, 3))
 
 num_params = model.count_params()
 print(f'Number of parameters: {num_params:,}\n')
 
 model.summary()
 
+#Callbacks
 # Create a callback that will interrupt training when the validation loss stops improving
 early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
 
@@ -101,8 +107,10 @@ tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram
 # learning rate schedule
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1),
                               patience=3, min_lr=0.5e-6, verbose=1)
-initial_lrate = 0.1
 
+
+# Compile and Fit
+initial_lrate = 0.1
 adam_optimizer = keras.optimizers.Adam(learning_rate=initial_lrate)
 # Compile the model
 model.compile(optimizer=adam_optimizer, loss=tf.keras.losses.MeanAbsoluteError(),
