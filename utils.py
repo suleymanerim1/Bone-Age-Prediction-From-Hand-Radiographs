@@ -6,6 +6,8 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from keras import Sequential
+from keras import layers
 
 
 
@@ -77,7 +79,7 @@ def image_dataset_creator_from_path(image_file_list, Input_size=224):
         # Read the image file
         image_string = tf.io.read_file(image_path)
         # Decode the image
-        image = tf.image.decode_png(image_string, channels=3)
+        image = tf.image.decode_png(image_string, channels=1)
         # Resize the image
         image_resized = tf.image.resize(image, (Input_size, Input_size))
         # Standardized image
@@ -92,21 +94,29 @@ def image_dataset_creator_from_path(image_file_list, Input_size=224):
 
 
 # Augmentation
-def data_augmentation(images):
-    # Randomly flip the images horizontally
-    seed = (1, 2)
-    images = tf.image.stateless_random_flip_left_right(images,seed)
+#def data_augmentation(images):
+#    # Randomly flip the images horizontally
+#    seed = (1, 2)
+#    images = tf.image.stateless_random_flip_left_right(images,seed)
+#
+#    # Randomly adjust the brightness of the images
+#    seed = (1, 2)
+#    images = tf.image.stateless_random_saturation(images, 0, 0.25,seed)
+#
+#    # Randomly adjust the contrast of the images
+#    seed = (1, 2)
+#    images = tf.image.stateless_random_contrast(images, 0, 0.25,seed)
+#    return images
 
-    # Randomly adjust the brightness of the images
-    seed = (1, 2)
-    images = tf.image.stateless_random_saturation(images, 0, 0.25,seed)
-
-    # Randomly adjust the contrast of the images
-    seed = (1, 2)
-    images = tf.image.stateless_random_contrast(images, 0, 0.25,seed)
-
-
-    return images
+# Create a data augmentation stage with ing, rotations,translation, zooms, horizontal flipp
+data_augmentation = Sequential(
+    [
+        layers.RandomRotation(0.2),
+        layers.RandomTranslation(height_factor= 0.2,width_factor=0.2),
+        layers.RandomZoom(0.2),
+        layers.RandomFlip("horizontal")
+    ]
+)
 
 
 # Create Dataset

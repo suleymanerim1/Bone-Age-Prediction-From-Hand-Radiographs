@@ -10,7 +10,6 @@ from tensorflow import keras
 
 import utils
 import model_trials
-import dnn_models
 
 #Create dataset paths
 train_path = 'Bone Age Datasets\\train'
@@ -50,8 +49,8 @@ for path in data_paths:
     gender_dataset = tf.data.Dataset.from_tensor_slices(gender)
 
     # Create a dataset of images zipped with age
-    #datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
-    datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
+    datasets.append(tf.data.Dataset.zip(((images_dataset, gender_dataset), age_dataset)))
+    #datasets.append(tf.data.Dataset.zip((images_dataset, age_dataset)))
 
     len_dataset.append(len(gender))
 
@@ -64,7 +63,7 @@ train_len = len_dataset[0]
 val_len = len_dataset[1]
 test_len = len_dataset[2]
 
-batch_size = 32
+batch_size = 64
 train_dataset = utils.create_dataset(train_dataset,
                                      batch_size=batch_size,
                                      shuffle=False,
@@ -89,7 +88,8 @@ print(val_dataset)
 print(test_dataset)
 
 tf.keras.backend.clear_session()
-model = model_trials.model20((Input_Size, Input_Size, 3))
+model = model_trials.model5_bn_gn((Input_Size, Input_Size, 1))
+#model = model_trials.model20()
 
 num_params = model.count_params()
 print(f'Number of parameters: {num_params:,}\n')
@@ -98,26 +98,27 @@ model.summary()
 
 #Callbacks
 # Create a callback that will interrupt training when the validation loss stops improving
-early_stopping = EarlyStopping(monitor='val_loss', patience=5, verbose=1, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_loss', patience=8, verbose=1, restore_best_weights=True)
 
 # tensorboard
 log_dir = "./logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
 
 # learning rate schedule
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=np.sqrt(0.1),
-                              patience=3, min_lr=0.5e-6, verbose=1)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1,
+                              patience=4, min_lr=0.001, verbose=1)
 
 
 # Compile and Fit
 initial_lrate = 0.1
+#initial_lrate_for_transfer_learning = 0.001
 adam_optimizer = keras.optimizers.Adam(learning_rate=initial_lrate)
 # Compile the model
 model.compile(optimizer=adam_optimizer, loss=tf.keras.losses.MeanAbsoluteError(),
               metrics=tf.keras.metrics.mean_absolute_error)
 
 # Train the model
-hist = model.fit(train_dataset, epochs=200,
+hist = model.fit(train_dataset, epochs=50,
                  steps_per_epoch=train_steps,
                  validation_data=val_dataset,
                  validation_steps=val_steps,
@@ -127,7 +128,7 @@ hist = model.fit(train_dataset, epochs=200,
                  )
 
 # Evaluate the model
-test_mae = model.evaluate(test_dataset, steps=test_steps, workers=-1)
+test_mae = model.evaluate(test_dataset, steps=test_steps, workers=os.cpu_count(),use_multiprocessing = True)
 print('Test loss:', test_mae)
 
 print("\n")
