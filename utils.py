@@ -154,7 +154,7 @@ def create_dataset(dataset, batch_size, shuffle=False, augment=False, cache_file
     dataset = dataset.batch(batch_size=batch_size)
 
     if augment:
-        dataset = dataset.map(lambda x, y: (data_augmentation(x), y),
+        dataset = dataset.map(lambda x, y: ((data_augmentation(x[0]),x[1]),y),
                               num_parallel_calls=AUTOTUNE)
 
     # Prefetch

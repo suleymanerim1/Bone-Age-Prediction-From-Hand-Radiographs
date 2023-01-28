@@ -67,7 +67,7 @@ batch_size = 64
 train_dataset = utils.create_dataset(train_dataset,
                                      batch_size=batch_size,
                                      shuffle=False,
-                                     augment=False,
+                                     augment=True,
                                      cache_file='train_cache'
                                      )
 val_dataset = utils.create_dataset(val_dataset,
@@ -78,7 +78,7 @@ test_dataset = utils.create_dataset(test_dataset,
                                     batch_size=batch_size,
                                     cache_file='test_cache')
 
-number_train_repeat = 1
+number_train_repeat = 2
 train_steps = int(np.ceil(train_len / batch_size))*number_train_repeat
 val_steps = int(np.ceil(val_len / batch_size))*number_train_repeat
 test_steps = int(np.ceil(test_len / batch_size))*number_train_repeat
@@ -88,7 +88,7 @@ print(val_dataset)
 print(test_dataset)
 
 tf.keras.backend.clear_session()
-model = model_trials.model5_bn_gn((Input_Size, Input_Size, 1))
+model = model_trials.model3_bn_gn((Input_Size, Input_Size, 1))
 #model = model_trials.model20()
 
 num_params = model.count_params()

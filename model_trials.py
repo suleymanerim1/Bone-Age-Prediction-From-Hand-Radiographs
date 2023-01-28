@@ -185,6 +185,71 @@ def model1_bn_gn(input_shape):
 
     return model
 
+
+# model 1 with batch norm with gender info with reg
+# 6 stages no skip
+def model1_bn_gn_dr(input_shape):
+    X_input = Input(input_shape, name='Input')
+
+    # first stage
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st1_conv1', kernel_initializer=glorot_uniform(seed=0))(X_input)
+    X = BatchNormalization(axis=3, name='st1_batch_norm1')(X)
+    X = Activation('relu', name='st1_relu1')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv2')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm2')(X)
+    X = Activation('relu', name='st1_relu2')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv3')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm3')(X)
+    X = Activation('relu', name='st1_relu3')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st1_max_pool')(X)
+
+    # second stage
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv1')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm1')(X)
+    X = Activation('relu', name='st2_relu1')(X)
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv2')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm2')(X)
+    X = Activation('relu', name='st2_relu2')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st2_max_pool')(X)
+
+    # third stage
+    X = Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st3_conv1')(X)
+    X = BatchNormalization(axis=3, name='st3_batch_norm1')(X)
+    X = Activation('relu', name='st3_relu1')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st3_max_pool')(X)
+
+    # forth stage
+    X = Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st4_conv1')(X)
+    X = BatchNormalization(axis=3, name='st4_batch_norm1')(X)
+    X = Activation('relu', name='st4_relu1')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st4_max_pool')(X)
+
+    # fifth stage
+    X = Conv2D(filters=128, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st5_conv1')(X)
+    X = BatchNormalization(axis=3, name='st5_batch_norm1')(X)
+    X = Activation('relu', name='st5_relu1')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st5_max_pool')(X)
+
+    # sixth stage
+    X = Flatten(name='Flatten')(X)
+
+    Y_input = Input(1)
+    Y = Dense(100, activation='relu', name='dense-gender', kernel_initializer=glorot_uniform(seed=0))(Y_input)
+
+    X = concatenate(inputs=[X, Y])
+    X = Dropout(0.5)(X)
+    X = Dense(512, activation='relu', name='dense-1')(X)
+    X = Dense(256, activation='relu', name='dense-2')(X)
+    X = Dense(1, name='output')(X)
+
+    # Create the model
+    model = Model(inputs=[X_input, Y_input], outputs=X, name='trial')
+
+    return model
+
 #----------------------------------------------------------
 
 # model2
@@ -412,6 +477,85 @@ def model2_bn_gn(input_shape):
     return model
 
 
+# model2 with batch norm with gender info with reg
+# 6 stages  no skip, yes inception
+def model2_bn_gn_dr(input_shape):
+    X_input = Input(input_shape, name='Input')
+
+    # first stage
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st1_conv1', kernel_initializer=glorot_uniform(seed=0))(X_input)
+    X = BatchNormalization(axis=3, name='st1_batch_norm1')(X)
+    X = Activation('relu', name='st1_relu1')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv2')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm2')(X)
+    X = Activation('relu', name='st1_relu2')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv3')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm3')(X)
+    X = Activation('relu', name='st1_relu3')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st1_max_pool')(X)
+
+    # second stage
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv1')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm1')(X)
+    X = Activation('relu', name='st2_relu1')(X)
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv2')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm2')(X)
+    X = Activation('relu', name='st2_relu2')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st2_max_pool')(X)
+
+    # third stage
+    X = inception_module_with_bn_wout_wd(X,
+                                         filters_1x1=32,
+                                         filters_3x3_reduce=16,
+                                         filters_3x3=32,
+                                         filters_5x5_reduce=16,
+                                         filters_5x5=32,
+                                         filters_pool_proj=32,
+                                         name='st3_inception1_')
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st3_max_pool')(X)
+
+    # forth stage
+    X = inception_module_with_bn_wout_wd(X,
+                                         filters_1x1=32,
+                                         filters_3x3_reduce=32,
+                                         filters_3x3=64,
+                                         filters_5x5_reduce=16,
+                                         filters_5x5=32,
+                                         filters_pool_proj=32,
+                                         name='st4_inception1_')
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st4_max_pool')(X)
+
+    # fifth stage
+    X = inception_module_with_bn_wout_wd(X,
+                                         filters_1x1=32,
+                                         filters_3x3_reduce=64,
+                                         filters_3x3=128,
+                                         filters_5x5_reduce=16,
+                                         filters_5x5=32,
+                                         filters_pool_proj=32,
+                                         name='st5_inception1_')
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st5_max_pool')(X)
+
+    # sixth stage
+    X = Flatten(name='Flatten')(X)
+
+    Y_input = Input(1)
+    Y = Dense(100, activation='relu', name='dense-gender', kernel_initializer=glorot_uniform(seed=0))(Y_input)
+
+    X = concatenate(inputs=[X, Y])
+    X = Dropout(0.5)(X)
+    X = Dense(512, activation='relu', name='dense-1')(X)
+    X = Dense(256, activation='relu', name='dense-2')(X)
+    X = Dense(1, name='output')(X)
+
+    # Create the model
+    model = Model(inputs=[X_input, Y_input], outputs=X, name='trial')
+
+    return model
+
 #----------------------------------------------------------
 # model3
 # 6 stages , no reg, no batch norm, yes skip
@@ -580,6 +724,65 @@ def model3_bn_gn(input_shape):
     return model
 
 
+# model3 with batch norm with gender, yes reg
+# 6 stages  yes skip
+def model3_bn_gn_dr(input_shape):
+    X_input = Input(input_shape, name='Input')
+
+    # first stage
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st1_conv1', kernel_initializer=glorot_uniform(seed=0))(X_input)
+    X = BatchNormalization(axis=3, name='st1_batch_norm1')(X)
+    X = Activation('relu', name='st1_relu1')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv2')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm2')(X)
+    X = Activation('relu', name='st1_relu2')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv3')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm3')(X)
+    X = Activation('relu', name='st1_relu3')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st1_max_pool')(X)
+
+    # second stage
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv1')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm1')(X)
+    X = Activation('relu', name='st2_relu1')(X)
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv2')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm2')(X)
+    X = Activation('relu', name='st2_relu2')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st2_max_pool')(X)
+
+    # third stage
+    X = bottleneck_residual_block_with_bn_wout_wd(X, 3, [32, 32, 32],
+                                                  stage=3, block='a', reduce=True, s=2)
+
+    # forth stage
+    X = bottleneck_residual_block_with_bn_wout_wd(X, 3, [64, 64, 64],
+                                                  stage=4, block='a', reduce=True, s=2)
+
+    # fifth stage
+    X = bottleneck_residual_block_with_bn_wout_wd(X, 3, [128, 128, 128],
+                                                  stage=5, block='a', reduce=True, s=2)
+
+    # sixth stage
+    X = Flatten(name='Flatten')(X)
+
+    Y_input = Input(1)
+    Y = Dense(100, activation='relu', name='dense-gender', kernel_initializer=glorot_uniform(seed=0))(Y_input)
+
+    X = concatenate(inputs=[X, Y])
+    X = Dropout(0.5)(X)
+    X = Dense(512, activation='relu', name='dense-1')(X)
+    X = Dense(256, activation='relu', name='dense-2')(X)
+    X = Dense(1, name='output')(X)
+
+    # Create the model
+    model = Model(inputs=[X_input, Y_input], outputs=X, name='trial')
+
+    return model
+
+
 #----------------------------------------------------------
 # model4
 # 6 stages , no reg, no batch norm, yes skip- pre activated
@@ -733,6 +936,65 @@ def model4_bn_gn(input_shape):
 
     X = concatenate(inputs=[X, Y])
 
+    X = Dense(512, activation='relu', name='dense-1')(X)
+    X = Dense(256, activation='relu', name='dense-2')(X)
+    X = Dense(1, name='output')(X)
+
+    # Create the model
+    model = Model(inputs=[X_input, Y_input], outputs=X, name='trial')
+
+    return model
+
+
+# model4 with batch norm with gender info with reg
+# 6 stages,  skip- pre activated
+def model4_bn_gn_dr(input_shape):
+    X_input = Input(input_shape, name='Input')
+
+    # first stage
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st1_conv1', kernel_initializer=glorot_uniform(seed=0))(X_input)
+    X = BatchNormalization(axis=3, name='st1_batch_norm1')(X)
+    X = Activation('relu', name='st1_relu1')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv2')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm2')(X)
+    X = Activation('relu', name='st1_relu2')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv3')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm3')(X)
+    X = Activation('relu', name='st1_relu3')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st1_max_pool')(X)
+
+    # second stage
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv1')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm2')(X)
+    X = Activation('relu', name='st2_relu1')(X)
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv2')(X)
+
+    # Do not use activation after second stage, because it is going to be pre applied in preactivated residual block
+    # third stage
+    X = preactivated_residual_block_with_bn_wout_wd (X, 3, [32, 32, 32],
+                                               stage=3, block='a', reduce=True, s=2)
+
+    # forth stage
+    X = preactivated_residual_block_with_bn_wout_wd(X, 3, [64, 64, 64],
+                                               stage=4, block='a', reduce=True, s=2)
+
+    # fifth stage
+    X = preactivated_residual_block_with_bn_wout_wd(X, 3, [128, 128, 128],
+                                               stage=5, block='a', reduce=True, s=2)
+    # Use max pool
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st5_max_pool')(X)
+
+    # sixth stage
+    X = Flatten(name='Flatten')(X)
+
+    Y_input = Input(1)
+    Y = Dense(100, activation='relu', name='dense-gender', kernel_initializer=glorot_uniform(seed=0))(Y_input)
+
+    X = concatenate(inputs=[X, Y])
+    X = Dropout(0.5)(X)
     X = Dense(512, activation='relu', name='dense-1')(X)
     X = Dense(256, activation='relu', name='dense-2')(X)
     X = Dense(1, name='output')(X)
@@ -1018,6 +1280,102 @@ def model5_bn_gn(input_shape):
 
     return model
 
+
+# model5 with batch norm with gender info with reg
+# 6 stages ,yes skip, yes inception
+def model5_bn_gn_dr(input_shape):
+    X_input = Input(input_shape, name='Input')
+
+    # first stage
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st1_conv1', kernel_initializer=glorot_uniform(seed=0))(X_input)
+    X = BatchNormalization(axis=3, name='st1_batch_norm1')(X)
+    X = Activation('relu', name='st1_relu1')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv2')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm2')(X)
+    X = Activation('relu', name='st1_relu2')(X)
+    X = Conv2D(filters=8, kernel_size=(3, 3), strides=(1, 1), padding='same', name='st1_conv3')(X)
+    X = BatchNormalization(axis=3, name='st1_batch_norm3')(X)
+    X = Activation('relu', name='st1_relu3')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st1_max_pool')(X)
+
+    # second stage
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv1')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm1')(X)
+    X = Activation('relu', name='st2_relu1')(X)
+    X = Conv2D(filters=16, kernel_size=(3, 3), strides=(1, 1), padding='same',
+               name='st2_conv2')(X)
+    X = BatchNormalization(axis=3, name='st2_batch_norm2')(X)
+    X = Activation('relu', name='st2_relu2')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st2_max_pool')(X)
+
+
+    # third stage
+    # Save the input value. You'll need this later to add back to the main path.
+    X_shortcut = X
+    X_shortcut = Conv2D(filters=128, kernel_size=(1, 1), strides=(1, 1), padding='same',
+                        name='st3_skip_conn_conv1')(X_shortcut)
+    X = inception_module_with_bn_wout_wd(X,
+                                    filters_1x1=32,
+                                    filters_3x3_reduce=16,
+                                    filters_3x3=32,
+                                    filters_5x5_reduce=16,
+                                    filters_5x5=32,
+                                    filters_pool_proj=32,
+                                    name='st3_inception1_')
+    X = Add()([X, X_shortcut])
+    X = Activation('relu')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st3_max_pool')(X)
+
+    # forth stage
+    X_shortcut = X
+    X_shortcut = Conv2D(filters=160, kernel_size=(1, 1), strides=(1, 1), padding='same',
+                        name='st4_skip_conn_conv1')(X_shortcut)
+    X = inception_module_with_bn_wout_wd(X,
+                                    filters_1x1=32,
+                                    filters_3x3_reduce=32,
+                                    filters_3x3=64,
+                                    filters_5x5_reduce=16,
+                                    filters_5x5=32,
+                                    filters_pool_proj=32,
+                                    name='st4_inception1_')
+    X = Add()([X, X_shortcut])
+    X = Activation('relu')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st4_max_pool')(X)
+
+    # fifth stage
+    X_shortcut = X
+    X_shortcut = Conv2D(filters=224, kernel_size=(1, 1), strides=(1, 1), padding='same',
+                        name='st5_skip_conn_conv1')(X_shortcut)
+    X = inception_module_with_bn_wout_wd(X,
+                                    filters_1x1=32,
+                                    filters_3x3_reduce=64,
+                                    filters_3x3=128,
+                                    filters_5x5_reduce=16,
+                                    filters_5x5=32,
+                                    filters_pool_proj=32,
+                                    name='st5_inception1_')
+    X = Add()([X, X_shortcut])
+    X = Activation('relu')(X)
+    X = MaxPool2D(pool_size=(2, 2), strides=(2, 2), name='st5_max_pool')(X)
+
+    # sixth stage
+    X = Flatten(name='Flatten')(X)
+
+    Y_input = Input(1)
+    Y = Dense(100, activation='relu', name='dense-gender', kernel_initializer=glorot_uniform(seed=0))(Y_input)
+
+    X = concatenate(inputs=[X, Y])
+    X = Dropout(0.5)(X)
+    X = Dense(512, activation='relu', name='dense-1')(X)
+    X = Dense(256, activation='relu', name='dense-2')(X)
+    X = Dense(1, name='output')(X)
+
+    # Create the model
+    model = Model(inputs=[X_input, Y_input], outputs=X, name='trial')
+
+    return model
 
 #----------------------------------------------------------
 # model transfer_learning
