@@ -88,7 +88,7 @@ print(val_dataset)
 print(test_dataset)
 
 tf.keras.backend.clear_session()
-model = model_trials.model3_bn_gn((Input_Size, Input_Size, 1))
+model = model_trials.model5_bn_gn((Input_Size, Input_Size, 1))
 #model = model_trials.model20()
 
 num_params = model.count_params()
