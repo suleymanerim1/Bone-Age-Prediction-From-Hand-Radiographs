@@ -13,7 +13,7 @@ This study investigates the use of convolutional neural networks (CNNs) for esti
 Solve the bone age prediction as a regression task.
 - As input: use row images or extract futures
 - As output: use the age value for regression
-- Asses the importance of the gender information
+- Assess the importance of the gender information
 
 ## Dataset Description
 - Hands’ X-ray images (digital and scanned) from two U.S. hospitals
@@ -42,35 +42,17 @@ Solve the bone age prediction as a regression task.
 
 ## Project Structure
 ```bash
-├── configurations
-│   ├── experiment1_Uniform
-│   ├── experiment2_Gaussian
-│   ├── experiment6_CustomerChurn
-│   ├── experiment9_BreastCancer
-├── datasets
-│   ├── CustomerChurn
-│   └── BreastCancer
-├── runs (results will be saved here)
-│   ├── graphs
-│   ├── output.yaml
-│   └── log files
-├── papers
-│   ├── Lacoste_Julien et al.
-│   ├── Tsuji et al.
-│   ├── Yıldırım
-├── src (source codes)
-│   ├── FrankWolfeVariants.py
-│   ├── data_generation.py
-│   ├── execution.py
-│   ├── logger.py
-│   ├── plotting.py
-│   ├── utils.py
-│   └── partials/template
+├── Task_description.pdf 
+├── Report.pdf
+├── Presentation.pptx
+├── Experiments_results.ods
 ├── main.py
-├── setup.py
-├── requirements.txt
-├── README.md
-└── .gitignore
+├── model_trials.py
+├── inception.py
+├── resnet.py
+├── utils.py
+├── Additional Resources
+│   ├── Halabi.pdf
+│   └── Larson.pdf
+└── README.md
 ```
-
-
